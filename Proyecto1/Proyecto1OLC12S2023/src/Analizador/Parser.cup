@@ -1,0 +1,78 @@
+package Analizador;
+import java_cup.runtime.*;
+
+
+//PARSER 
+parser code
+{://Codigo visible
+    
+    public void syntax_error(Symbol s){
+        System.out.println("Error R de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1) );
+    }
+
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{ 
+        System.out.println("Error NR de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1) );
+    }
+
+:}
+
+
+terminal String PTCOMA,PAR_IZQ,PAR_DER,COR_IZQ,COR_DER; // mismo nombre en el archivo lexico
+terminal String MAS,MENOS,POR,DIV;
+terminal String ENTERO;
+terminal String DECIMAL;
+terminal String UMENOS;                             // para la precedencia para los negativos y no en 
+terminal String REVALUAR;
+
+non terminal ini;                                   // terminales para las transiciones 
+non terminal instrucciones;
+non terminal instruccion;
+non terminal Double expresion;                      // el Double es el tipo que retorna la expresion 
+
+precedence left MAS,MENOS;                          // precedencia de operadores 
+precedence left POR,DIV;
+precedence right UMENOS; 
+
+start with ini;                                     // iniciar la gramataica 
+
+ini::=instrucciones;                                // produccion inicial 
+
+instrucciones ::= instruccion instrucciones
+ | instruccion
+; 
+
+instruccion ::= 
+   REVALUAR COR_IZQ expresion:a COR_DER PTCOMA{:System.out.println("El valor de la expresión es: "+a);:}
+   | error PTCOMA
+;
+
+expresion  ::= 
+    MENOS expresion:a                      {:RESULT=a*-1; System.out.println("operación umenos"); :}%prec UMENOS  
+ |  expresion:a MAS        expresion:b     {:RESULT=a+b;:}
+ |  expresion:a MENOS      expresion:b     {:RESULT=a-b;:}
+ |  expresion:a POR        expresion:b     {:RESULT=a*b;:}
+ |  expresion:a DIV   expresion:b     {:RESULT=a/b;:}
+ |  ENTERO:a                               {:RESULT=new Double(a);:}
+ |  DECIMAL:a                              {:RESULT=new Double(a);:}
+ |  PAR_IZQ expresion:a PAR_DER              {:RESULT=a;:}
+;
+
+/*
+Definición de regla:
+
+expresion ::= ...: Esta línea indica que estás definiendo una regla llamada expresion. Cada regla tiene uno o más patrones que deben coincidir con ciertas estructuras en la entrada.
+Operadores y Expresiones:
+
+Las líneas siguientes representan diferentes patrones de expresiones que pueden ser reconocidos y evaluados.
+Cada patrón consiste en un operador (como MAS, MENOS, POR, DIV) seguido de una expresión a y posiblemente una segunda expresión b.
+Después de los patrones, hay una acción entre { ... } que se ejecuta cuando el patrón coincide. Esta acción define cómo se debe evaluar la expresión y proporciona el resultado utilizando :RESULT.
+Precedencia de Operadores:
+
+%prec UMENOS se usa para asignar una precedencia específica al operador MENOS. Esto asegura que la expresión UMENOS tenga una precedencia menor que otros operadores, como la suma y la resta.
+Números:
+
+Las líneas que comienzan con ENTERO:a y DECIMAL:a representan patrones para reconocer números enteros y decimales en la entrada. La acción convierte estos números en objetos Double para su posterior manipulación.
+Paréntesis:
+
+La línea PAR_IZQ expresion:a PAR_DER reconoce una expresión encerrada entre paréntesis. La acción simplemente devuelve el valor de la expresión a.
+*/
