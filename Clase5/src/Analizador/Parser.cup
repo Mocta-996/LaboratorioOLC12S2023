@@ -1,0 +1,73 @@
+package Analizador;
+import java_cup.runtime.*;
+// importar arraylist
+import java.util.ArrayList;
+// importar clase de excepciones
+import Errores.Exception_;
+
+
+//PARSER 
+parser code
+{://Codigo visible
+    
+    // declarar un arraylist para los errores sintacticos 
+    public static ArrayList<Exception_ > erroresSintacticos = new ArrayList<Exception_>();
+    
+    public void syntax_error(Symbol s){
+        //System.out.println("Error R de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1) );
+        erroresSintacticos.add(new Exception_("Sintáctico", "Error Recuperable de sintaxis: "+ s.value , Integer.toString(s.left), Integer.toString(s.right) ));
+    }
+
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{ 
+        //System.out.println("Error NR de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1) );
+        erroresSintacticos.add(new Exception_ ("Sintáctico", "Error No Recuperable de sintaxis: "+ s.value , Integer.toString(s.left), Integer.toString(s.right) ));
+    }
+
+:}
+
+
+terminal String PTCOMA,PAR_IZQ,PAR_DER,COR_IZQ,COR_DER,LLAV_IZQ,LLAV_DER; // mismo nombre en el archivo lexico
+terminal String IGUAL;
+terminal String MAS,MENOS,POR,DIV;
+terminal String ENTERO,DECIMAL,ID,LETRA,CADENA,CARACTER;
+terminal String UMENOS;                             // para la precedencia para los negativos y no en 
+terminal String RVOID,RMAIN;
+terminal String RINT,RDOUBLE,RCHAR,RSTRING,RBOOL;
+
+non terminal inicio,principal;                                   // terminales para las transiciones 
+non terminal instrucciones,instruccion;
+non terminal declaracion,tipoDato;
+non terminal expresion;
+
+
+
+
+start with inicio;                                     // iniciar la gramataica 
+
+inicio::=principal;                                // produccion inicial 
+principal::=RVOID RMAIN PAR_IZQ PAR_DER LLAV_IZQ instrucciones  LLAV_DER
+;
+
+instrucciones::=instrucciones instruccion
+|instruccion
+;
+
+
+instruccion::= declaracion PTCOMA
+        | error PTCOMA
+;
+
+
+declaracion::=tipoDato ID:a IGUAL expresion:b {:System.out.println("Declaración encontrada: "+a+" con valor: "+b) ;:}
+;
+
+expresion::=ENTERO:a  {: RESULT = a; :}
+|DECIMAL  
+;
+
+tipoDato::=RINT
+|RDOUBLE
+|RCHAR
+|RSTRING
+|RBOOL
+;
