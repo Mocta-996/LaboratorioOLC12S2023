@@ -1,5 +1,6 @@
 // importar librerias
 import { Request, Response } from "express";
+import { Context } from "./interpreterSQL/abstract/Context";
 
 class InterpreteController {
 
@@ -21,9 +22,9 @@ class InterpreteController {
       // parsear el codigo fuente
       const ast = parser.parse(text); //ast es el arbol de sintaxis abstracta
       try {
-        
+        const globalContext = new Context(null);
         for (const inst of ast){
-          inst.interpret();
+          inst.interpret(globalContext);
         }
 
         res.json({ consola:"ejecutado correctamente", errores: "ninguno" });

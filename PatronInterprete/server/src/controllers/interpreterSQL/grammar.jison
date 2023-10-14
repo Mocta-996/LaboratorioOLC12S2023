@@ -45,6 +45,9 @@
 
 "create"          return 'TK_CREATE';
 "table"           return 'TK_TABLE';
+"insert"      return 'TK_INSERT';
+"into"        return 'TK_INTO';
+"values"      return 'TK_VALUES';
 
 [a-zA-Z][a-zA-Z0-9_]*   return 'TK_IDENTIFICADOR';
 [0-9]+\b                return 'TK_ENTERO';
@@ -70,6 +73,8 @@
 	const {Type} = require('./abstract/Return');
 	const {FieldExpression} = require('./terminal/FieldExpression');
 	const {CreateTableExpression} = require('./nonterminal/ddl/createTable/CreateTableExpression');
+	const {LiteralExpression} = require('./terminal/LiteralExpression');
+  	const {InsertExpression} = require('./nonterminal/dml/insert/InsertExpression');
 %}
 
 
@@ -93,6 +98,7 @@ instrucciones
 
 instruccion
 	: ddl   TK_PTCOMA       { $$ = $1; }
+	| dml   TK_PTCOMA       { $$ = $1; }
 	| error TK_PTCOMA
   	{   console.error('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column);}
 ;
@@ -114,6 +120,38 @@ listaAtributosTabla
 atributoTabla
   : TK_IDENTIFICADOR tipos { $$ = new FieldExpression(@1.first_line, @1.first_column,$1, $2); }
 ;
+
+// DML
+dml
+  : insertar { $$ = $1; }
+;
+
+insertar
+	: TK_INSERT TK_INTO TK_IDENTIFICADOR TK_PARIZQ listaIDS TK_PARDER TK_VALUES TK_PARIZQ listaValores TK_PARDER
+  	{ $$ = new InsertExpression(@1.first_line, @1.first_column,$3, $5,$9); }
+;
+
+listaIDS
+  : listaIDS TK_COMA TK_IDENTIFICADOR { $1.push($3); $$ = $1;  }
+  | TK_IDENTIFICADOR { $$ = [$1]; }
+;
+
+listaValores
+  : listaValores TK_COMA valor { $1.push($3); $$ = $1;  }
+  | valor { $$ = [$1]; }
+;
+
+valor
+  : TK_ENTERO { $$ = new LiteralExpression(@1.first_line, @1.first_column,$1, Type.INT); }
+  | TK_DOUBLE { $$ = new LiteralExpression(@1.first_line, @1.first_column,$1, Type.DOUBLE); }
+  | TK_DATE { $$ = new LiteralExpression(@1.first_line, @1.first_column,$1, Type.DATE); }
+  | TK_VARCHAR { $$ = new LiteralExpression(@1.first_line, @1.first_column,$1, Type.VARCHAR); }
+  | TK_TRUE { $$ = new LiteralExpression(@1.first_line, @1.first_column,$1, Type.BOOLEAN);}
+  | TK_FALSE { $$ = new LiteralExpression(@1.first_line, @1.first_column,$1, Type.BOOLEAN); }
+  | TK_NULL { $$ = new LiteralExpression(@1.first_line, @1.first_column,$1, Type.NULL); }
+;
+
+
 
 tipos
   : TK_TENTERO      { $$ = Type.INT; }

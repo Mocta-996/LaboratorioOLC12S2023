@@ -2,12 +2,12 @@ import { Literal } from "../abstract/Return";
 
 export class Table {
     public name: string;
-    public tuples: Array<Object> =[];
-    public fields : Array<Literal> = [];
+    public tuples: { [key: string]: any }[];
+    public fields : Literal[];
 
-    constructor(name: string, tuples: any, fields: []) {
+    constructor(name: string, fields: Literal[]) {
         this.name = name;
-        this.tuples = tuples;
         this.fields = fields;
+        this.tuples = [];
     }
 }

@@ -1,5 +1,6 @@
 import { AbstractSQLExpression } from '../abstract/AbstractSQLExpression';
 import { Type, Literal } from '../abstract/Return';
+import { Context } from '../abstract/Context';
 
 export class LiteralExpression extends AbstractSQLExpression {
 
@@ -11,7 +12,7 @@ export class LiteralExpression extends AbstractSQLExpression {
     super(line, column);
   }
 
-  public interpret(): Literal{
+  public interpret(context:Context): Literal{
     // verificar el tipo de dato
     switch (this.type) {
       case Type.INT:

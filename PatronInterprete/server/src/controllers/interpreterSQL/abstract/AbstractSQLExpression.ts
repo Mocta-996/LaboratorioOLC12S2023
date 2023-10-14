@@ -1,3 +1,5 @@
+
+import { Context } from "./Context";
 export abstract class AbstractSQLExpression {
   public line: number;
   public column: number;
@@ -6,5 +8,5 @@ export abstract class AbstractSQLExpression {
     this.column = column;
   }
 
-  public abstract interpret(): any;
+  public abstract interpret(context: Context): any;
 }

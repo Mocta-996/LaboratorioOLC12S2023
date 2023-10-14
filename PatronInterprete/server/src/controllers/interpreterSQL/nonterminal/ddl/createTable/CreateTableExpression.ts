@@ -1,5 +1,7 @@
 import { AbstractSQLExpression } from '../../../abstract/AbstractSQLExpression';
 import { FieldExpression } from '../../../terminal/FieldExpression';
+import { Context } from '../../../abstract/Context';
+import { Table } from '../../../bd/Table';
 
 export class CreateTableExpression extends AbstractSQLExpression {
 
@@ -8,14 +10,13 @@ export class CreateTableExpression extends AbstractSQLExpression {
     super(line, column);
   }
 
-  public interpret(){
+  public interpret(context: Context){  
+    const fields = this.fields.map((item) => {
+      const value = item.interpret(context);
+      return value;
+    });
     // se crea una tabla con el nombre:
-    console.log("Se crea una tabla con el nombre: "+this.name);
-    // se crean los campos:
-    console.log("Se crean los campos: ");
-    for(let field of this.fields){
-      console.log(field.interpret());
-    }
+    context.saveTable(this.name.toString(),new Table(this.name.toString(),fields));
   }
 
 
