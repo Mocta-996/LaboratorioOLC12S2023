@@ -1,6 +1,7 @@
 // importar librerias
 import { Request, Response } from "express";
 import { Context } from "./interpreterSQL/abstract/Context";
+import { MethodExpression } from "./interpreterSQL/nonterminal/moreStatements/MethodExpression";
 
 class InterpreteController {
 
@@ -23,11 +24,21 @@ class InterpreteController {
       const ast = parser.parse(text); //ast es el arbol de sintaxis abstracta
       try {
         const globalContext = new Context(null);
+        
         for (const inst of ast){
-          inst.interpret(globalContext);
+          if(inst instanceof MethodExpression){
+            inst.interpret(globalContext);
+          } 
         }
 
-        res.json({ consola:"ejecutado correctamente", errores: "ninguno" });
+        for (const inst of ast){
+          if(!(inst instanceof MethodExpression)){
+            inst.interpret(globalContext);
+          } 
+        }
+        
+        const simbolos = globalContext.getSimbolos();
+        res.json({ consola:"ejecutado correctamente", errores: "ninguno" , simbolos: simbolos});
 
       } catch (error) {
         console.log(error);

@@ -23,6 +23,7 @@
 "]"                 return 'TK_CORDER';
 "{"                 return 'TK_LLAVEIZQ';
 "}"                 return "TK_LLAVEDER";
+"*"                 return "TK_ASTERISCO";
 
 
 "="                 return 'TK_IGUALACION';
@@ -31,6 +32,7 @@
 "<="                return 'TK_MENORIGUAL';
 ">"                 return 'TK_MAYORQUE';
 ">="                return 'TK_MAYORIGUAL';
+"@"                 return 'TK_ARROBA';
 
 // tipos de variables
 "int"               return 'TK_TENTERO';
@@ -48,6 +50,13 @@
 "insert"      return 'TK_INSERT';
 "into"        return 'TK_INTO';
 "values"      return 'TK_VALUES';
+"select"      return 'TK_SELECT';
+"from"        return 'TK_FROM';
+"procedure"   return 'TK_PROCEDURE';
+"as"          return 'TK_AS';
+"begin"       return 'TK_BEGIN';
+"end"         return 'TK_END';
+"print"       return 'TK_PRINT';
 
 [a-zA-Z][a-zA-Z0-9_]*   return 'TK_IDENTIFICADOR';
 [0-9]+\b                return 'TK_ENTERO';
@@ -74,7 +83,12 @@
 	const {FieldExpression} = require('./terminal/FieldExpression');
 	const {CreateTableExpression} = require('./nonterminal/ddl/createTable/CreateTableExpression');
 	const {LiteralExpression} = require('./terminal/LiteralExpression');
-  	const {InsertExpression} = require('./nonterminal/dml/insert/InsertExpression');
+  const {InsertExpression} = require('./nonterminal/dml/insert/InsertExpression');
+  const {SelectExpression} = require('./nonterminal/dml/select/SelectExpression');
+  const {MethodExpression} = require('./nonterminal/moreStatements/MethodExpression');
+  const {BlockStatementExpression} = require('./nonterminal/moreStatements/BlockStatementExpression');
+  const {PrintExpression} = require('./nonterminal/moreStatements/PrintExpression');
+  const {CallMethodExpression} = require('./nonterminal/moreStatements/CallMethodExpression');
 %}
 
 
@@ -99,6 +113,9 @@ instrucciones
 instruccion
 	: ddl   TK_PTCOMA       { $$ = $1; }
 	| dml   TK_PTCOMA       { $$ = $1; }
+  | guardarMetodo TK_PTCOMA { $$ = $1; }
+  | print TK_PTCOMA         { $$ = $1; }
+  | llamadaMetodo TK_PTCOMA { $$ = $1; }
 	| error TK_PTCOMA
   	{   console.error('Este es un error sintáctico: ' + yytext + ', en la linea: ' + this._$.first_line + ', en la columna: ' + this._$.first_column);}
 ;
@@ -121,9 +138,12 @@ atributoTabla
   : TK_IDENTIFICADOR tipos { $$ = new FieldExpression(@1.first_line, @1.first_column,$1, $2); }
 ;
 
+
+
 // DML
 dml
   : insertar { $$ = $1; }
+  | select { $$ = $1; }
 ;
 
 insertar
@@ -152,6 +172,46 @@ valor
 ;
 
 
+select 
+  : TK_SELECT TK_ASTERISCO TK_FROM TK_IDENTIFICADOR { $$ = new SelectExpression(@1.first_line, @1.first_column, $4); }   
+;
+
+
+// GUARDAR METOODOS/FUNCIONES
+guardarMetodo
+  : TK_CREATE TK_PROCEDURE TK_IDENTIFICADOR listaParametros TK_AS sentencias
+  { $$ = new MethodExpression(@1.first_line, @1.first_column,$3,$4,$6); }
+;
+
+listaParametros
+  : listaParametros TK_COMA parametro { $1.push($3); $$ = $1;  }
+  | parametro { $$ = [$1]; }
+;
+
+parametro
+  : TK_ARROBA TK_IDENTIFICADOR tipos { $$ = new FieldExpression(@1.first_line, @1.first_column,$2, $3); }
+;
+
+sentencias
+  : TK_BEGIN instrucciones TK_END
+  { $$ = new BlockStatementExpression(@1.first_line, @1.first_column,$2); }
+  | TK_BEGIN TK_END  { $$ = new BlockStatementExpression(@1.first_line, @1.first_column,[]); }
+;
+
+// print
+print
+  : TK_PRINT expression { $$ = new PrintExpression(@1.first_line, @1.first_column,$2); }
+;
+
+expression
+  :valor { $$ = $1; }
+;
+
+// llamada metodo
+llamadaMetodo
+  : TK_IDENTIFICADOR TK_PARIZQ listaValores TK_PARDER
+  { $$ = new CallMethodExpression(@1.first_line, @1.first_column,$1,$3); }
+;
 
 tipos
   : TK_TENTERO      { $$ = Type.INT; }

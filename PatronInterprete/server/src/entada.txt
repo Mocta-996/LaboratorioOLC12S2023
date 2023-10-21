@@ -1,0 +1,19 @@
+-- crear un metodo/procedimiento almacenado
+contextoGlobal
+
+SumarNumeros((5+5),2);
+
+
+CREATE PROCEDURE SumarNumeros
+  contextoMetodo -> contextoGlobal
+  @numero1 INT,
+  @numero2 INT
+AS
+BEGIN
+    contextoLocal -> contextoMetodo
+    PRINT "hola compiladores";
+    PRINT "hola compiladores";
+    PRINT "hola compiladores";
+END;
+
+
